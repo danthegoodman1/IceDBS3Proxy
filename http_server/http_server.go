@@ -48,7 +48,8 @@ func StartHTTPServer() *HTTPServer {
 
 	s.Echo.GET("/hc", s.HealthCheck)
 	s.Echo.GET("/", ccHandler(s.ListObjectInterceptor))
-	s.Echo.GET("/*", ccHandler(s.ListObjectInterceptor))
+	s.Echo.GET("/*", ccHandler(s.CheckListOrGetObject))
+	s.Echo.HEAD("/*", ccHandler(s.ProxyS3Request))
 
 	s.Echo.Listener = listener
 	go func() {

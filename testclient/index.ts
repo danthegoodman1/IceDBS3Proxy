@@ -1,4 +1,4 @@
-import { ListObjectsV2Command, S3Client } from "@aws-sdk/client-s3";
+import { GetObjectCommand, ListObjectsV2Command, S3Client } from "@aws-sdk/client-s3";
 
 const clientVhost = new S3Client({
   endpoint: "http://localhost:8080",
@@ -24,6 +24,14 @@ const command = new ListObjectsV2Command({
   Prefix: "hey/",
 })
 
-const res = await clientPath.send(command)
+console.log("checking path style routing list")
+let res = await clientPath.send(command)
 console.log(res)
 console.log(`got ${res.Contents?.length} items`)
+
+console.log("checking path style routing get object")
+const getRes = await clientPath.send(new GetObjectCommand({
+  Bucket: "testbucket",
+  Key: "twitch_extensions.csv"
+}))
+console.log(await getRes.Body?.transformToString())

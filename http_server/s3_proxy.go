@@ -3,6 +3,7 @@ package http_server
 import (
 	"encoding/xml"
 	"fmt"
+	"github.com/danthegoodman1/GoAPITemplate/utils"
 	"github.com/rs/zerolog"
 	"net/http"
 	"net/url"
@@ -99,7 +100,7 @@ func (srv *HTTPServer) ListObjectInterceptor(c *CustomContext) error {
 
 	// realBucketName := ""    // TODO: from lookup
 	var contents []Content
-	for i := 1; i <= 10000; i++ {
+	for i := 1; i <= 10; i++ {
 		contents = append(contents, Content{
 			Key:          fmt.Sprintf("some-path/%d.parquet", i),
 			Size:         1024,
@@ -108,28 +109,74 @@ func (srv *HTTPServer) ListObjectInterceptor(c *CustomContext) error {
 	}
 
 	res := ListBucketResult{
-		XMLName:     xml.Name{},
-		IsTruncated: false, // let's just serve all of them
-		// Contents: []Content{
-		// 	{
-		// 		Key:          "some/sample.parquet",
-		// 		Size:         1024,
-		// 		StorageClass: "STANDARD",
-		// 	},
-		// 	{
-		// 		Key:          "another/path/totally/sample.parquet",
-		// 		Size:         2048,
-		// 		StorageClass: "STANDARD",
-		// 	},
-		// },
+		XMLName:      xml.Name{},
+		IsTruncated:  false, // let's just serve all of them
 		Contents:     contents,
 		Name:         virtualBucketName,
-		MaxKeys:      10000,
+		MaxKeys:      len(contents),
 		EncodingType: "url",
-		KeyCount:     10000,
+		KeyCount:     len(contents),
 	}
 
 	// Look up files
 
 	return c.XML(http.StatusOK, res)
+}
+
+func (srv *HTTPServer) CheckListOrGetObject(c *CustomContext) error {
+	logger := zerolog.Ctx(c.Request().Context())
+
+	// Can check this immediately, should catch ClickHouse and DuckDB
+	if listType := c.QueryParam("list-type"); listType == "2" {
+		logger.Debug().Msg("got list type query param, intercepting list request")
+		return srv.ListObjectInterceptor(c)
+	}
+
+	domainParts := strings.Split(c.Request().Host, ".")
+	if len(domainParts) == 2 {
+		// vhost routing, get object request
+		logger.Debug().Msg("detected vhost routing, proxying request")
+		return srv.ProxyS3Request(c)
+	} else {
+		// path routing, path style list possibly
+		u, err := url.Parse(c.Request().RequestURI)
+		if err != nil {
+			return c.InternalError(err, "error in url.Parse")
+		}
+		pathParts := strings.Split(u.Path, "/")
+		if len(pathParts) == 2 {
+			// This is a `/bucket` request, ListObject(V2)
+			logger.Debug().Msg("got path style routing list request")
+			return srv.ListObjectInterceptor(c)
+		}
+		// Otherwise we are `/bucket/**`, get object
+		logger.Debug().Msg("path style routing is probably a get, proxying")
+		return srv.ProxyS3Request(c)
+	}
+}
+
+func (srv *HTTPServer) ProxyS3Request(c *CustomContext) error {
+	logger := zerolog.Ctx(c.Request().Context())
+	logger.UpdateContext(func(c zerolog.Context) zerolog.Context {
+		return c.Bool("proxied", true)
+	})
+	logger.Debug().Msgf("getting request uri to proxy %s", c.Request().RequestURI)
+	req, err := http.NewRequestWithContext(c.Request().Context(), c.Request().Method, utils.S3ProxyUrl+c.Request().RequestURI, nil)
+	if err != nil {
+		return c.InternalError(err, "error making new request for proxying")
+	}
+
+	// Copy headers
+	headers := c.Request().Header.Clone()
+	// If we have an access key, throw it away, as it's partially based on the host
+	headers.Del("Authorization")
+	req.Header = headers
+
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return c.InternalError(err, "error doing proxy request")
+	}
+	defer res.Body.Close()
+
+	return c.Stream(res.StatusCode, res.Header.Get("content-type"), res.Body)
 }
