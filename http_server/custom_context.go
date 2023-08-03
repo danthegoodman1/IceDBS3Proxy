@@ -3,7 +3,10 @@ package http_server
 import (
 	"context"
 	"errors"
+	"github.com/danthegoodman1/GoAPITemplate/utils"
 	"net/http"
+	"net/url"
+	"strings"
 
 	"github.com/danthegoodman1/GoAPITemplate/gologger"
 	"github.com/google/uuid"
@@ -13,8 +16,8 @@ import (
 
 type CustomContext struct {
 	echo.Context
-	RequestID string
-	UserID    string
+	RequestID, UserID, VirtualBucketName, RealBucketName string
+	IsPathRouting                                        bool
 }
 
 func CreateReqContext(next echo.HandlerFunc) echo.HandlerFunc {
@@ -36,10 +39,24 @@ func CreateReqContext(next echo.HandlerFunc) echo.HandlerFunc {
 }
 
 // Casts to custom context for the handler, so this doesn't have to be done per handler
-func ccHandler(h func(*CustomContext) error) echo.HandlerFunc {
-	// TODO: Include the path?
+func (srv *HTTPServer) ccHandler(h func(*CustomContext) error) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		return h(c.(*CustomContext))
+		cc := c.(*CustomContext)
+		domainParts := strings.Split(c.Request().Host, ".")
+		if len(domainParts) > len(utils.MyURLParts) {
+			// vhost routing
+			cc.VirtualBucketName = domainParts[0]
+		} else {
+			// path routing, path style list possibly
+			u, err := url.Parse(c.Request().RequestURI)
+			if err != nil {
+				return cc.InternalError(err, "error in url.Parse")
+			}
+			pathParts := strings.Split(u.Path, "/")
+			cc.VirtualBucketName = pathParts[1]
+			cc.IsPathRouting = true
+		}
+		return h(cc)
 	}
 }
 

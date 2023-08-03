@@ -47,9 +47,9 @@ func StartHTTPServer() *HTTPServer {
 	s.Echo.Validator = &CustomValidator{validator: validator.New()}
 
 	s.Echo.GET("/hc", s.HealthCheck)
-	s.Echo.GET("/", ccHandler(s.ListObjectInterceptor))
-	s.Echo.GET("/*", ccHandler(s.CheckListOrGetObject))
-	s.Echo.HEAD("/*", ccHandler(s.ProxyS3Request))
+	s.Echo.GET("/", s.ccHandler(s.ListObjectInterceptor))
+	s.Echo.GET("/*", s.ccHandler(s.CheckListOrGetObject))
+	s.Echo.HEAD("/*", s.ccHandler(s.ProxyS3Request))
 
 	s.Echo.Listener = listener
 	go func() {
@@ -113,7 +113,12 @@ func LoggerMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 		if cl == "" {
 			cl = "0"
 		}
-		logger.Debug().Str("method", req.Method).Str("remote_ip", c.RealIP()).Str("req_uri", req.RequestURI).Str("handler_path", c.Path()).Str("path", p).Int("status", res.Status).Int64("latency_ns", int64(stop)).Str("protocol", req.Proto).Str("bytes_in", cl).Int64("bytes_out", res.Size).Msg("req recived")
+		cc, ok := c.(*CustomContext)
+		log := logger.Debug().Str("method", req.Method).Str("remote_ip", c.RealIP()).Str("req_uri", req.RequestURI).Str("handler_path", c.Path()).Str("path", p).Int("status", res.Status).Int64("latency_ns", int64(stop)).Str("protocol", req.Proto).Str("bytes_in", cl).Int64("bytes_out", res.Size)
+		if ok {
+			log.Str("virtual_bucket", cc.VirtualBucketName).Str("real_bucket", cc.RealBucketName).Bool("is_path_routing", cc.IsPathRouting)
+		}
+		log.Msg("req recived")
 		return nil
 	}
 }

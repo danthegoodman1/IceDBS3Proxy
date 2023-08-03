@@ -73,14 +73,12 @@ func (srv *HTTPServer) ListObjectInterceptor(c *CustomContext) error {
 	}
 
 	var virtualBucketName string
-	domainParts := strings.Split(c.Request().Host, ".")
-	isPathRouting := false
-	if len(domainParts) > 2 {
+	if c.IsPathRouting {
 		// vhost routing
+		domainParts := strings.Split(c.Request().Host, ".")
 		virtualBucketName = domainParts[0]
 	} else {
 		// path routing
-		isPathRouting = true
 		u, err := url.Parse(c.Request().RequestURI)
 		if err != nil {
 			return c.InternalError(err, "error in url.Parse")
@@ -93,9 +91,6 @@ func (srv *HTTPServer) ListObjectInterceptor(c *CustomContext) error {
 	}
 
 	logger := zerolog.Ctx(c.Request().Context())
-	logger.UpdateContext(func(c zerolog.Context) zerolog.Context {
-		return c.Str("virtualBucketName", virtualBucketName).Bool("isPathRouting", isPathRouting)
-	})
 	logger.Debug().Msg("got list request")
 
 	maxKeys := utils.Deref(req.MaxKeys, 1000)
