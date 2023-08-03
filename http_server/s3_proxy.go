@@ -129,26 +129,25 @@ func (srv *HTTPServer) CheckListOrGetObject(c *CustomContext) error {
 		return srv.ListObjectInterceptor(c)
 	}
 
-	domainParts := strings.Split(c.Request().Host, ".")
-	if len(domainParts) == 2 {
-		// vhost routing, get object request
-		logger.Debug().Msg("detected vhost routing, proxying request")
-		return srv.ProxyS3Request(c)
-	} else {
+	if c.IsPathRouting {
 		// path routing, path style list possibly
 		u, err := url.Parse(c.Request().RequestURI)
 		if err != nil {
 			return c.InternalError(err, "error in url.Parse")
 		}
 		pathParts := strings.Split(u.Path, "/")
-		if len(pathParts) == 2 {
-			// This is a `/bucket` request, ListObject(V2)
-			logger.Debug().Msg("got path style routing list request")
+
+		if len(pathParts) == 3 {
+			// This is a `/bucket/` request, ListObject(V2)
+			logger.Debug().Msg("request is list")
 			return srv.ListObjectInterceptor(c)
 		}
 		// Otherwise we are `/bucket/**`, get object
-		logger.Debug().Msg("path style routing is probably a get, proxying")
+		logger.Debug().Msg("request is get")
 		return srv.ProxyS3Request(c)
+	} else {
+		// vhost routing
+		return srv.ListObjectInterceptor(c)
 	}
 }
 
@@ -157,7 +156,7 @@ func (srv *HTTPServer) ProxyS3Request(c *CustomContext) error {
 	logger.UpdateContext(func(c zerolog.Context) zerolog.Context {
 		return c.Bool("proxied", true)
 	})
-	logger.Debug().Msgf("getting request uri to proxy %s", c.Request().RequestURI)
+	logger.Debug().Msg("proxying request")
 	req, err := http.NewRequestWithContext(c.Request().Context(), c.Request().Method, utils.S3ProxyUrl+c.Request().RequestURI, nil)
 	if err != nil {
 		return c.InternalError(err, "error making new request for proxying")
