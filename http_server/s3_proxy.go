@@ -98,9 +98,11 @@ func (srv *HTTPServer) ListObjectInterceptor(c *CustomContext) error {
 	})
 	logger.Debug().Msg("got list request")
 
+	maxKeys := utils.Deref(req.MaxKeys, 1000)
+
 	// realBucketName := ""    // TODO: from lookup
 	var contents []Content
-	for i := 1; i <= 10; i++ {
+	for i := 1; i <= maxKeys; i++ {
 		contents = append(contents, Content{
 			Key:          fmt.Sprintf("some-path/%d.parquet", i),
 			Size:         1024,
@@ -113,9 +115,9 @@ func (srv *HTTPServer) ListObjectInterceptor(c *CustomContext) error {
 		IsTruncated:  false, // let's just serve all of them
 		Contents:     contents,
 		Name:         virtualBucketName,
-		MaxKeys:      len(contents),
+		MaxKeys:      maxKeys,
 		EncodingType: "url",
-		KeyCount:     len(contents),
+		KeyCount:     maxKeys,
 	}
 
 	// Look up files
