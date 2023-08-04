@@ -22,14 +22,16 @@ const clientPath = new S3Client({
 console.log("checking path style routing list")
 let res = await clientPath.send(new ListObjectsV2Command({
   Bucket: "testbucket",
-  Prefix: "hey/",
   MaxKeys: 123
 }))
 console.log(`got ${res.Contents?.length} items`)
+const target = res.Contents![0].Key!
+console.log('getting file:', target )
 
 console.log("checking path style routing get object")
 const getRes = await clientPath.send(new GetObjectCommand({
   Bucket: "testbucket",
-  Key: "twitch_extensions.csv"
+  Key: target
 }))
-console.log((await getRes.Body?.transformToString())?.length, "bytes")
+const content = await getRes.Body?.transformToString()
+console.log(content, content?.length, "bytes")

@@ -106,9 +106,15 @@ func (srv *HTTPServer) ListObjectInterceptor(c *CustomContext) error {
 	}
 
 	res := ListBucketResult{
-		XMLName:      xml.Name{},
-		IsTruncated:  false, // let's just serve all of them
-		Contents:     contents,
+		XMLName:     xml.Name{},
+		IsTruncated: false, // let's just serve all of them
+		Contents: []Content{
+			{
+				Key:          "twitch_extensions.csv",
+				Size:         2443,
+				StorageClass: "STANDARD",
+			},
+		},
 		Name:         virtualBucketName,
 		MaxKeys:      maxKeys,
 		EncodingType: "url",
@@ -137,7 +143,7 @@ func (srv *HTTPServer) CheckListOrGetObject(c *CustomContext) error {
 		}
 		pathParts := strings.Split(u.Path, "/")
 
-		if len(pathParts) == 3 {
+		if len(pathParts) == 3 && pathParts[2] == "" {
 			// This is a `/bucket/` request, ListObject(V2)
 			logger.Debug().Msg("request is list")
 			return srv.ListObjectInterceptor(c)
@@ -153,11 +159,22 @@ func (srv *HTTPServer) CheckListOrGetObject(c *CustomContext) error {
 
 func (srv *HTTPServer) ProxyS3Request(c *CustomContext) error {
 	logger := zerolog.Ctx(c.Request().Context())
-	logger.UpdateContext(func(c zerolog.Context) zerolog.Context {
-		return c.Bool("proxied", true)
+	prependPath := "tenant"
+	newPath := prependPath + c.Request().RequestURI
+	if c.IsPathRouting {
+		// Need to deal with the bucket `/bucket/...` needs to be `/bucket/prepend/...
+		pathParts := strings.Split(c.Request().RequestURI, "/")
+		newPathParts := []string{pathParts[1], prependPath}
+		newPathParts = append(newPathParts, pathParts[2:]...)
+		newPath = "/" + strings.Join(newPathParts, "/")
+	}
+
+	logger.UpdateContext(func(ctx zerolog.Context) zerolog.Context {
+		return ctx.Bool("proxied", true).Str("newPath", newPath)
 	})
 	logger.Debug().Msg("proxying request")
-	req, err := http.NewRequestWithContext(c.Request().Context(), c.Request().Method, utils.S3ProxyUrl+c.Request().RequestURI, nil)
+
+	req, err := http.NewRequestWithContext(c.Request().Context(), c.Request().Method, utils.S3ProxyUrl+newPath, nil)
 	if err != nil {
 		return c.InternalError(err, "error making new request for proxying")
 	}
