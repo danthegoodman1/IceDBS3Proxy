@@ -45,7 +45,7 @@ func NewIceDBLogReader(ctx context.Context) (*IceDBLogReader, error) {
 
 type (
 	LogSnapshot struct {
-		AliveFiles map[string]bool
+		AliveFiles map[string]FileMarker
 		Schema     Schema
 	}
 
@@ -76,7 +76,7 @@ func (lr *IceDBLogReader) ReadState(ctx context.Context, pathprefix string, maxM
 	logger := zerolog.Ctx(ctx)
 	var contToken *string
 	snapshot := LogSnapshot{
-		AliveFiles: make(map[string]bool),
+		AliveFiles: make(map[string]FileMarker),
 		Schema:     make(map[string]string),
 	}
 	var s3Files []types.Object
@@ -166,7 +166,7 @@ func (lr *IceDBLogReader) ReadState(ctx context.Context, pathprefix string, maxM
 				delete(snapshot.AliveFiles, fm.Path)
 			} else {
 				// otherwise add to alive files
-				snapshot.AliveFiles[fm.Path] = true
+				snapshot.AliveFiles[fm.Path] = fm
 			}
 		}
 	}
