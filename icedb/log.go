@@ -164,7 +164,7 @@ func (lr *IceDBLogReader) ReadState(ctx context.Context, pathprefix string, maxM
 			if _, exists := snapshot.AliveFiles[fm.Path]; fm.Tombstone != nil && exists {
 				// found a tombstone for the file, remove it
 				delete(snapshot.AliveFiles, fm.Path)
-			} else {
+			} else if fm.Tombstone == nil {
 				// otherwise add to alive files
 				snapshot.AliveFiles[fm.Path] = fm
 			}
