@@ -45,7 +45,7 @@ func NewIceDBLogReader(ctx context.Context) (*IceDBLogReader, error) {
 
 type (
 	LogSnapshot struct {
-		AliveFiles map[string]FileMarker
+		AliveFiles []FileMarker
 		Schema     Schema
 	}
 
@@ -72,11 +72,12 @@ type (
 	}
 )
 
-func (lr *IceDBLogReader) ReadState(ctx context.Context, pathprefix string, maxMS int64) (*LogSnapshot, error) {
+// Offset is with the path prefix
+func (lr *IceDBLogReader) ReadState(ctx context.Context, pathPrefix, offset string, maxMS, maxItems int64) (*LogSnapshot, error) {
 	logger := zerolog.Ctx(ctx)
 	var contToken *string
 	snapshot := LogSnapshot{
-		AliveFiles: make(map[string]FileMarker),
+		AliveFiles: []FileMarker{},
 		Schema:     make(map[string]string),
 	}
 	var s3Files []types.Object
@@ -86,13 +87,18 @@ func (lr *IceDBLogReader) ReadState(ctx context.Context, pathprefix string, maxM
 			Bucket:            utils.S3BucketPtr,
 			ContinuationToken: contToken,
 			MaxKeys:           1000,
-			Prefix:            utils.Ptr(strings.Join([]string{pathprefix, "_log"}, "/")),
+			Prefix:            utils.Ptr(strings.Join([]string{pathPrefix, "_log"}, "/")),
 		})
 		if err != nil {
 			return nil, fmt.Errorf("error in : %w", err)
 		}
 		for _, object := range listObjects.Contents {
-			ts, _, err := getLogFileInfo(*object.Key)
+			key := *object.Key
+			if offset != "" && key < offset {
+				// If we are under the offset, continue
+				continue
+			}
+			ts, _, err := getLogFileInfo(key)
 			if err != nil {
 				return nil, fmt.Errorf("error in getLogFileInfo for file %s: %w", *object.Key, err)
 			}
@@ -101,6 +107,7 @@ func (lr *IceDBLogReader) ReadState(ctx context.Context, pathprefix string, maxM
 			}
 		}
 		if !listObjects.IsTruncated {
+			// Break if we are over or if we are at the end of the list
 			break
 		}
 	}
@@ -119,6 +126,7 @@ func (lr *IceDBLogReader) ReadState(ctx context.Context, pathprefix string, maxM
 		return 0
 	})
 
+	aliveFiles := map[string]FileMarker{}
 	for _, object := range s3Files {
 		obj, err := lr.s3Client.GetObject(ctx, &s3.GetObjectInput{
 			Bucket: utils.S3BucketPtr,
@@ -161,20 +169,51 @@ func (lr *IceDBLogReader) ReadState(ctx context.Context, pathprefix string, maxM
 			if err != nil {
 				return nil, fmt.Errorf("error unmarshaling file marker line %d for file %s: %w", i, *object.Key, err)
 			}
-			if _, exists := snapshot.AliveFiles[fm.Path]; fm.Tombstone != nil && exists {
+			if _, exists := aliveFiles[fm.Path]; fm.Tombstone != nil && exists {
 				// found a tombstone for the file, remove it
-				delete(snapshot.AliveFiles, fm.Path)
+				delete(aliveFiles, fm.Path)
 			} else if fm.Tombstone == nil {
-				// otherwise add to alive files
-				snapshot.AliveFiles[fm.Path] = fm
+				aliveFiles[fm.Path] = fm
 			}
 		}
 	}
 
-	if len(snapshot.AliveFiles) == 0 {
+	if len(aliveFiles) == 0 {
 		return nil, ErrNoAliveFiles
 	}
 
+	// Need the final list to do offset and limit, otherwise we
+	for _, file := range aliveFiles {
+		snapshot.AliveFiles = append(snapshot.AliveFiles, file)
+	}
+
+	// Sort
+	slices.SortFunc(snapshot.AliveFiles, func(a, b FileMarker) int {
+		if a.Path > b.Path {
+			return 1
+		}
+		if a.Path < b.Path {
+			return -1
+		}
+		return 0
+	})
+
+	// Check for offset
+	if offset != "" {
+		ind := slices.IndexFunc(snapshot.AliveFiles, func(marker FileMarker) bool {
+			return marker.Path == offset
+		})
+		if ind != -1 && len(snapshot.AliveFiles) > ind {
+			snapshot.AliveFiles = snapshot.AliveFiles[ind+1:]
+		}
+	}
+
+	// Limit
+	if maxItems != 0 && maxItems < int64(len(snapshot.AliveFiles)) {
+		snapshot.AliveFiles = snapshot.AliveFiles[:maxItems]
+	}
+
+	fmt.Println("returning", len(snapshot.AliveFiles))
 	return &snapshot, nil
 }
 
