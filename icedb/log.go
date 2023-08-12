@@ -213,7 +213,6 @@ func (lr *IceDBLogReader) ReadState(ctx context.Context, pathPrefix, offset stri
 		snapshot.AliveFiles = snapshot.AliveFiles[:maxItems]
 	}
 
-	fmt.Println("returning", len(snapshot.AliveFiles))
 	return &snapshot, nil
 }
 
