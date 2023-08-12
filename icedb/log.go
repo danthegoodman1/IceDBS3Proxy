@@ -81,17 +81,19 @@ func (lr *IceDBLogReader) ReadState(ctx context.Context, pathPrefix, offset stri
 		Schema:     make(map[string]string),
 	}
 	var s3Files []types.Object
+	prefix := strings.Join([]string{pathPrefix, "_log"}, "/")
 	for {
-		logger.Debug().Msgf("listing s3 objects")
+		logger.Debug().Str("prefix", prefix).Msgf("listing s3 objects")
 		listObjects, err := lr.s3Client.ListObjectsV2(ctx, &s3.ListObjectsV2Input{
 			Bucket:            utils.S3BucketPtr,
 			ContinuationToken: contToken,
 			MaxKeys:           1000,
-			Prefix:            utils.Ptr(strings.Join([]string{pathPrefix, "_log"}, "/")),
+			Prefix:            &prefix,
 		})
 		if err != nil {
 			return nil, fmt.Errorf("error in : %w", err)
 		}
+		logger.Debug().Msgf("got %d items in list", len(listObjects.Contents))
 		for _, object := range listObjects.Contents {
 			key := *object.Key
 			if offset != "" && key < offset {

@@ -3,6 +3,7 @@ package http_server
 import (
 	"encoding/xml"
 	"fmt"
+	"github.com/danthegoodman1/GoAPITemplate/icedb"
 	"github.com/danthegoodman1/GoAPITemplate/utils"
 	"github.com/rs/zerolog"
 	"net/http"
@@ -96,25 +97,29 @@ func (srv *HTTPServer) ListObjectInterceptor(c *CustomContext) error {
 	maxKeys := utils.Deref(req.MaxKeys, 1000)
 
 	// realBucketName := ""    // TODO: from lookup
+	logReader, err := icedb.NewIceDBLogReader(c.Request().Context())
+	if err != nil {
+		return fmt.Errorf("error in NewIceDBLogReader: %w", err)
+	}
+
+	aliveFiles, err := logReader.ReadState(c.Request().Context(), "tenant", utils.Deref(req.StartAfter, ""), time.Now().UnixMilli(), int64(utils.Deref(req.MaxKeys, 1000)))
+	if err != nil {
+		return fmt.Errorf("error in ReadState: %w", err)
+	}
+
 	var contents []Content
-	for i := 1; i <= maxKeys; i++ {
+	for _, af := range aliveFiles.AliveFiles {
 		contents = append(contents, Content{
-			Key:          fmt.Sprintf("some-path/%d.parquet", i),
-			Size:         1024,
+			Key:          strings.ReplaceAll(af.Path, "tenant/", ""), // drop the prefix
+			Size:         af.ByteLength,
 			StorageClass: "STANDARD",
 		})
 	}
 
 	res := ListBucketResult{
-		XMLName:     xml.Name{},
-		IsTruncated: false, // let's just serve all of them
-		Contents: []Content{
-			{
-				Key:          "twitch_extensions.csv",
-				Size:         2443,
-				StorageClass: "STANDARD",
-			},
-		},
+		XMLName:      xml.Name{},
+		IsTruncated:  false, // let's just serve all of them
+		Contents:     contents,
 		Name:         virtualBucketName,
 		MaxKeys:      maxKeys,
 		EncodingType: "url",
