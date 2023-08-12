@@ -27,12 +27,7 @@ func main() {
 			os.Exit(1)
 		}
 	}
-	logger.Debug().Msg("starting Tangia mono api")
-
-	// if err := crdb.ConnectToDB(); err != nil {
-	// 	logger.Error().Err(err).Msg("error connecting to CRDB")
-	// 	os.Exit(1)
-	// }
+	logger.Debug().Msg("Starting IceDB S3 Proxy")
 
 	prometheusReporter := observability.NewPrometheusReporter()
 	go func() {

@@ -1,15 +1,12 @@
-# GoAPITemplate
+# IceDB S3 Proxy
 
-## Log Context
+<!-- TOC -->
+* [IceDB S3 Proxy](#icedb-s3-proxy)
+  * [Lookup](#lookup)
+<!-- TOC -->
 
-The thing that gives logging a separate context is the function call:
+## Lookup
 
-```go
-logger := gologger.NewLogger()
-// ...
-ctx = logger.WithContext(ctx)
-```
+You need to lookup virtual buckets to real buckets.
 
-Otherwise all logging will share the context (weird I know).
-
-From here you can use `logger := zerolog.Ctx(ctx)`
+You can put a path prefix in the `LOOKUP_URL`. `LOOKUP_AUTH` will be passed in (blank string if not provided)

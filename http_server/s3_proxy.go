@@ -4,6 +4,7 @@ import (
 	"encoding/xml"
 	"fmt"
 	"github.com/danthegoodman1/GoAPITemplate/icedb"
+	"github.com/danthegoodman1/GoAPITemplate/lookup"
 	"github.com/danthegoodman1/GoAPITemplate/utils"
 	"github.com/rs/zerolog"
 	"net/http"
@@ -102,7 +103,13 @@ func (srv *HTTPServer) ListObjectInterceptor(c *CustomContext) error {
 		return fmt.Errorf("error in NewIceDBLogReader: %w", err)
 	}
 
-	aliveFiles, err := logReader.ReadState(c.Request().Context(), "tenant", utils.Deref(req.StartAfter, ""), time.Now().UnixMilli(), int64(utils.Deref(req.MaxKeys, 1000)))
+	// Resolve virtual bucket
+	resolvedBucket, err := lookup.ResolveVirtualBucket(c.Request().Context(), c.VirtualBucketName)
+	if err != nil {
+		return c.InternalError(err, "error in lookup.ResolveVirtualBucket")
+	}
+
+	aliveFiles, err := logReader.ReadState(c.Request().Context(), resolvedBucket.Prefix, utils.Deref(req.StartAfter, ""), utils.Deref(resolvedBucket.TimeMS, time.Now().UnixMilli()), int64(utils.Deref(req.MaxKeys, 1000)))
 	if err != nil {
 		return fmt.Errorf("error in ReadState: %w", err)
 	}
@@ -164,12 +171,18 @@ func (srv *HTTPServer) CheckListOrGetObject(c *CustomContext) error {
 
 func (srv *HTTPServer) ProxyS3Request(c *CustomContext) error {
 	logger := zerolog.Ctx(c.Request().Context())
-	prependPath := "tenant"
-	newPath := prependPath + c.Request().RequestURI
+
+	// Resolve virtual bucket
+	resolvedBucket, err := lookup.ResolveVirtualBucket(c.Request().Context(), c.VirtualBucketName)
+	if err != nil {
+		return c.InternalError(err, "error in lookup.ResolveVirtualBucket")
+	}
+
+	newPath := resolvedBucket.Prefix + c.Request().RequestURI
 	if c.IsPathRouting {
 		// Need to deal with the bucket `/bucket/...` needs to be `/bucket/prepend/...
 		pathParts := strings.Split(c.Request().RequestURI, "/")
-		newPathParts := []string{pathParts[1], prependPath}
+		newPathParts := []string{pathParts[1], resolvedBucket.Prefix}
 		newPathParts = append(newPathParts, pathParts[2:]...)
 		newPath = "/" + strings.Join(newPathParts, "/")
 	}

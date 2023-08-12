@@ -315,3 +315,25 @@ func IsErr[T error](err error) bool {
 	_, ok := AsErr[T](err)
 	return ok
 }
+
+// MustEnvInt64 gets env var as int64, exits if not found
+func MustEnvInt64(env string) int64 {
+	res := os.Getenv(env)
+	if res == "" {
+		panic(fmt.Sprintf("missing environment variable %s", env))
+	}
+	intVar, err := strconv.Atoi(res)
+	if err != nil {
+		panic(fmt.Sprintf("failed to convert env var %s to an int", env))
+	}
+	return int64(intVar)
+}
+
+// MustEnv will exit if `env` is not provided
+func MustEnv(env string) string {
+	res := os.Getenv(env)
+	if res == "" {
+		panic(fmt.Sprintf("missing environment variable %s", env))
+	}
+	return res
+}
