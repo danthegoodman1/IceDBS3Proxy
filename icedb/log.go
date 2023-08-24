@@ -96,7 +96,7 @@ func (lr *IceDBLogReader) ReadState(ctx context.Context, pathPrefix, offset stri
 		logger.Debug().Msgf("got %d items in list", len(listObjects.Contents))
 		for _, object := range listObjects.Contents {
 			key := *object.Key
-			if offset != "" && key < offset {
+			if offset != "" && key <= offset {
 				// If we are under the offset, continue
 				continue
 			}

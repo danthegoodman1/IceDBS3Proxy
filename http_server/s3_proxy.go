@@ -109,7 +109,10 @@ func (srv *HTTPServer) ListObjectInterceptor(c *CustomContext) error {
 		return c.InternalError(err, "error in lookup.ResolveVirtualBucket")
 	}
 
-	aliveFiles, err := logReader.ReadState(c.Request().Context(), resolvedBucket.Prefix, utils.Deref(req.StartAfter, ""), utils.Deref(resolvedBucket.TimeMS, time.Now().UnixMilli()), int64(utils.Deref(req.MaxKeys, 1000)))
+	// Prioritize ContinuationToken which is used if paginating (we force it to be last item), otherwise use StartAfter
+	offset := utils.Deref(req.ContinuationToken, utils.Deref(req.StartAfter, ""))
+
+	aliveFiles, err := logReader.ReadState(c.Request().Context(), resolvedBucket.Prefix, offset, utils.Deref(resolvedBucket.TimeMS, time.Now().UnixMilli()), int64(utils.Deref(req.MaxKeys, 1000)))
 	if err != nil {
 		return fmt.Errorf("error in ReadState: %w", err)
 	}
