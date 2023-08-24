@@ -96,10 +96,6 @@ func (lr *IceDBLogReader) ReadState(ctx context.Context, pathPrefix, offset stri
 		logger.Debug().Msgf("got %d items in list", len(listObjects.Contents))
 		for _, object := range listObjects.Contents {
 			key := *object.Key
-			if offset != "" && key <= offset {
-				// If we are under the offset, continue
-				continue
-			}
 			ts, _, err := getLogFileInfo(key)
 			if err != nil {
 				return nil, fmt.Errorf("error in getLogFileInfo for file %s: %w", *object.Key, err)
