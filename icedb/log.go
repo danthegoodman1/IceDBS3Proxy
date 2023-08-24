@@ -199,7 +199,7 @@ func (lr *IceDBLogReader) ReadState(ctx context.Context, pathPrefix, offset stri
 	// Check for offset
 	if offset != "" {
 		ind := slices.IndexFunc(snapshot.AliveFiles, func(marker FileMarker) bool {
-			return marker.Path == offset
+			return marker.Path > offset
 		})
 		if ind != -1 && len(snapshot.AliveFiles) > ind {
 			snapshot.AliveFiles = snapshot.AliveFiles[ind+1:]
