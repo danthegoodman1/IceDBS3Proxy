@@ -53,7 +53,7 @@ type (
 		Version             int  `json:"v"`
 		TimestampMS         int  `json:"t"`
 		SchemaStartLine     int  `json:"sch"`
-		FileMarkerStartLine int  `json:"f"`
+		FileMarkerStartLine *int `json:"f,omitempty"`
 		TombstoneStartLine  *int `json:"tmb,omitempty"`
 	}
 
@@ -160,18 +160,20 @@ func (lr *IceDBLogReader) ReadState(ctx context.Context, pathPrefix, offset stri
 			}
 		}
 
-		// Determine alive files
-		for i := meta.FileMarkerStartLine; i < len(fileLines); i++ {
-			var fm FileMarker
-			err = json.Unmarshal([]byte(fileLines[i]), &fm)
-			if err != nil {
-				return nil, fmt.Errorf("error unmarshaling file marker line %d for file %s: %w", i, *object.Key, err)
-			}
-			if _, exists := aliveFiles[fm.Path]; fm.Tombstone != nil && exists {
-				// found a tombstone for the file, remove it
-				delete(aliveFiles, fm.Path)
-			} else if fm.Tombstone == nil {
-				aliveFiles[fm.Path] = fm
+		if meta.FileMarkerStartLine != nil {
+			// Determine alive files
+			for i := *meta.FileMarkerStartLine; i < len(fileLines); i++ {
+				var fm FileMarker
+				err = json.Unmarshal([]byte(fileLines[i]), &fm)
+				if err != nil {
+					return nil, fmt.Errorf("error unmarshaling file marker line %d for file %s: %w", i, *object.Key, err)
+				}
+				if _, exists := aliveFiles[fm.Path]; fm.Tombstone != nil && exists {
+					// found a tombstone for the file, remove it
+					delete(aliveFiles, fm.Path)
+				} else if fm.Tombstone == nil {
+					aliveFiles[fm.Path] = fm
+				}
 			}
 		}
 	}
