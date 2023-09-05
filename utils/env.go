@@ -23,6 +23,12 @@ var (
 	LookupURL  = MustEnv("LOOKUP_URL")
 	LookupAuth = os.Getenv("LOOKUP_AUTH")
 
+	CacheEnabled    = os.Getenv("CACHE_ENABLED") == "1"
+	CachePeers      = strings.Split(os.Getenv("CACHE_PEERS"), ",")
+	CacheSelfAddr   = os.Getenv("CACHE_SELF_ADDR")
+	CacheBytes      = GetEnvOrDefaultInt("CACHE_BYTES", 100_000_000) // 100MB
+	CacheTTLSeconds = GetEnvOrDefaultInt("CACHE_SECONDS", 10)
+
 	DevLookupPrefix = os.Getenv("DEV_LOOKUP_PREFIX")
 	DevLookupTimeMS = os.Getenv("DEV_LOOKUP_TIME_MS")
 )

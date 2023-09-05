@@ -2,13 +2,13 @@ package icedb
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
+	"github.com/bytedance/sonic"
 	"github.com/danthegoodman1/GoAPITemplate/utils"
 	"github.com/rs/zerolog"
 	"io"
@@ -140,13 +140,13 @@ func (lr *IceDBLogReader) ReadState(ctx context.Context, pathPrefix, offset stri
 		}
 		fileLines := strings.Split(string(fileBytes), "\n")
 		var meta LogMeta
-		err = json.Unmarshal([]byte(fileLines[0]), &meta)
+		err = sonic.Unmarshal([]byte(fileLines[0]), &meta)
 		if err != nil {
 			return nil, fmt.Errorf("error unmarshaling meta for file %s: %w", *object.Key, err)
 		}
 
 		var schema Schema
-		err = json.Unmarshal([]byte(fileLines[meta.SchemaStartLine]), &schema)
+		err = sonic.Unmarshal([]byte(fileLines[meta.SchemaStartLine]), &schema)
 		if err != nil {
 			return nil, fmt.Errorf("error unmarshaling schema for file %s: %w", *object.Key, err)
 		}
@@ -163,7 +163,7 @@ func (lr *IceDBLogReader) ReadState(ctx context.Context, pathPrefix, offset stri
 		// Determine alive files
 		for i := meta.FileMarkerStartLine; i < len(fileLines); i++ {
 			var fm FileMarker
-			err = json.Unmarshal([]byte(fileLines[i]), &fm)
+			err = sonic.Unmarshal([]byte(fileLines[i]), &fm)
 			if err != nil {
 				return nil, fmt.Errorf("error unmarshaling file marker line %d for file %s: %w", i, *object.Key, err)
 			}

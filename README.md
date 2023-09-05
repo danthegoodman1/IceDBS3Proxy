@@ -18,3 +18,7 @@ Currently, the proxy expects the target bucket to require no auth, as found in t
 You need to lookup virtual buckets to real buckets.
 
 You can put a path prefix in the `LOOKUP_URL`. `LOOKUP_AUTH` will be passed in (blank string if not provided)
+
+## Configuration
+
+Check [the environment file for parameters](utils/env.go) :)
