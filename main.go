@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/danthegoodman1/GoAPITemplate/lookup"
 	"github.com/danthegoodman1/GoAPITemplate/observability"
 	"github.com/joho/godotenv"
 	"net/http"
@@ -40,6 +41,11 @@ func main() {
 
 	httpServer := http_server.StartHTTPServer()
 
+	// Setup cache if we need
+	if utils.CacheEnabled {
+		lookup.InitCache(context.Background())
+	}
+
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 	<-c
@@ -59,5 +65,14 @@ func main() {
 		logger.Error().Err(err).Msg("failed to shutdown HTTP server")
 	} else {
 		logger.Info().Msg("successfully shutdown HTTP server")
+	}
+
+	if utils.CacheEnabled {
+		ctx, cancel = context.WithTimeout(context.Background(), time.Second*10)
+		defer cancel()
+		err := lookup.CloseCache(ctx)
+		if err != nil {
+			logger.Error().Err(err).Msg("failed to close cache")
+		}
 	}
 }
