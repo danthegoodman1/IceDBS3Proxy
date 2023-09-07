@@ -11,6 +11,8 @@ Currently, the proxy expects the target bucket to require no auth, as found in t
 <!-- TOC -->
 * [IceDB S3 Proxy](#icedb-s3-proxy)
   * [Lookup](#lookup)
+  * [Configuration](#configuration)
+  * [Control Plane](#control-plane)
 <!-- TOC -->
 
 ## Lookup
