@@ -80,9 +80,14 @@ func CloseCache(ctx context.Context) error {
 }
 
 func resolveFromAPI(ctx context.Context, body []byte) ([]byte, error) {
-	req, err := http.NewRequestWithContext(ctx, utils.LookupURL+"/resolve_virtual_bucket", "POST", bytes.NewReader(body))
+	fmt.Println("sending body", string(body))
+	req, err := http.NewRequestWithContext(ctx, "POST", utils.LookupURL+"/resolve_virtual_bucket", bytes.NewReader(body))
 	if err != nil {
 		return nil, fmt.Errorf("error in NewRequestWithContext: %w", err)
+	}
+	req.Header.Set("content-type", "application/json")
+	if utils.LookupAuth != "" {
+		req.Header.Set("Authorization", utils.LookupAuth)
 	}
 
 	res, err := http.DefaultClient.Do(req)
@@ -96,6 +101,7 @@ func resolveFromAPI(ctx context.Context, body []byte) ([]byte, error) {
 	if err != nil {
 		return nil, fmt.Errorf("error in io.ReadAll: %w", err)
 	}
+
 	return resBytes, nil
 }
 
