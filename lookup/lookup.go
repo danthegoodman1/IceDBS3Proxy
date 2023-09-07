@@ -121,10 +121,10 @@ func ResolveVirtualBucket(ctx context.Context, virtBucket string) (*VirtualBucke
 		return &resBody, nil
 	}
 
-	var jBytes []byte
+	var jBytes, resBytes []byte
 	var err error
 	if utils.CacheEnabled {
-		if err := group.Get(ctx, virtBucket, groupcache.AllocatingByteSliceSink(&jBytes)); err != nil {
+		if err := group.Get(ctx, virtBucket, groupcache.AllocatingByteSliceSink(&resBytes)); err != nil {
 			return nil, fmt.Errorf("error getting from groupcache: %w", err)
 		}
 	} else {
@@ -135,15 +135,15 @@ func ResolveVirtualBucket(ctx context.Context, virtBucket string) (*VirtualBucke
 			return nil, fmt.Errorf("error in sonic.Marshal: %w", err)
 		}
 
-		resBytes, err := resolveFromAPI(ctx, jBytes)
+		resBytes, err = resolveFromAPI(ctx, jBytes)
 		if err != nil {
 			return nil, fmt.Errorf("error in resolveFromAPI: %w", err)
 		}
 
-		err = sonic.Unmarshal(resBytes, &resBody)
-		if err != nil {
-			return nil, fmt.Errorf("error in sonic.Unmarshal: %w", err)
-		}
+	}
+	err = sonic.Unmarshal(resBytes, &resBody)
+	if err != nil {
+		return nil, fmt.Errorf("error in sonic.Unmarshal: %w", err)
 	}
 
 	if resBody.Prefix == "" {

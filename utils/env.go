@@ -11,6 +11,7 @@ var (
 	S3ProxyUrl    = MustEnv("S3_PROXY_URL")
 	S3ProxyUrlPtr = Ptr(S3ProxyUrl)
 
+	HTTPPort   = GetEnvOrDefault("HTTP_PORT", "8080")
 	MyHost     = MustEnv("MY_HOST")
 	MyURLParts = strings.Split(MyHost, ".")
 
