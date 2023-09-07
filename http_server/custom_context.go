@@ -56,6 +56,10 @@ func (srv *HTTPServer) ccHandler(h func(*CustomContext) error) echo.HandlerFunc 
 			cc.VirtualBucketName = pathParts[1]
 			cc.IsPathRouting = true
 		}
+		logger := zerolog.Ctx(cc.Request().Context())
+		logger.UpdateContext(func(c zerolog.Context) zerolog.Context {
+			return c.Str("VirtBucket", cc.VirtualBucketName)
+		})
 		return h(cc)
 	}
 }

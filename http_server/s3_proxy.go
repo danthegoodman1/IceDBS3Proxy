@@ -2,6 +2,7 @@ package http_server
 
 import (
 	"encoding/xml"
+	"errors"
 	"fmt"
 	"github.com/danthegoodman1/GoAPITemplate/icedb"
 	"github.com/danthegoodman1/GoAPITemplate/lookup"
@@ -112,9 +113,22 @@ func (srv *HTTPServer) ListObjectInterceptor(c *CustomContext) error {
 	// Prioritize ContinuationToken which is used if paginating (we force it to be last item), otherwise use StartAfter
 	offset := utils.Deref(req.ContinuationToken, utils.Deref(req.StartAfter, ""))
 
+	res := ListBucketResult{
+		XMLName:      xml.Name{},
+		IsTruncated:  false, // let's just serve all of them
+		Name:         virtualBucketName,
+		MaxKeys:      maxKeys,
+		EncodingType: "url",
+		KeyCount:     maxKeys,
+	}
+
 	aliveFiles, err := logReader.ReadState(c.Request().Context(), resolvedBucket.Prefix, offset, utils.Deref(resolvedBucket.TimeMS, time.Now().UnixMilli()), int64(utils.Deref(req.MaxKeys, 1000)))
+	if errors.Is(err, icedb.ErrNoLogFiles) {
+		// Just return no items
+		return c.XML(http.StatusOK, res)
+	}
 	if err != nil {
-		return fmt.Errorf("error in ReadState: %w", err)
+		return c.InternalError(err, "error in ReadState")
 	}
 
 	var contents []Content
@@ -126,17 +140,7 @@ func (srv *HTTPServer) ListObjectInterceptor(c *CustomContext) error {
 		})
 	}
 
-	res := ListBucketResult{
-		XMLName:      xml.Name{},
-		IsTruncated:  false, // let's just serve all of them
-		Contents:     contents,
-		Name:         virtualBucketName,
-		MaxKeys:      maxKeys,
-		EncodingType: "url",
-		KeyCount:     maxKeys,
-	}
-
-	// Look up files
+	res.Contents = contents
 
 	return c.XML(http.StatusOK, res)
 }

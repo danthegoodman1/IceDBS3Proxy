@@ -19,6 +19,14 @@ const clientPath = new S3Client({
   }
 })
 
+console.log("test getting random file")
+const get1 = await clientPath.send(new GetObjectCommand({
+  Bucket: "testbucket",
+  Key: "poweredby.svg",
+}))
+const content1 = await get1.Body?.transformToString()
+console.log(content1, content1?.length, "bytes")
+
 console.log("checking path style routing list")
 let res = await clientPath.send(new ListObjectsV2Command({
   Bucket: "testbucket",
