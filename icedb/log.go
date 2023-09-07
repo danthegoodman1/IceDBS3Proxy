@@ -15,6 +15,7 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"time"
 )
 
 var (
@@ -74,6 +75,9 @@ type (
 
 // Offset is with the path prefix
 func (lr *IceDBLogReader) ReadState(ctx context.Context, pathPrefix, offset string, maxMS, maxItems int64) (*LogSnapshot, error) {
+	if maxMS == 0 {
+		maxMS = time.Now().UnixMilli()
+	}
 	logger := zerolog.Ctx(ctx)
 	var contToken *string
 	snapshot := LogSnapshot{
