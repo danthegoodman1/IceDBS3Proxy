@@ -22,3 +22,7 @@ You can put a path prefix in the `LOOKUP_URL`. `LOOKUP_AUTH` will be passed in (
 ## Configuration
 
 Check [the environment file for parameters](utils/env.go) :)
+
+## Control Plane
+
+If `TimeMS == 0`, then the current time of the operation will be used. This no longer guarantees stable snapshots, but is otherwise safe. This is included in cache so queries against a cached lookup will still use current time.
