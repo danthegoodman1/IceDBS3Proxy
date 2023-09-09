@@ -60,6 +60,6 @@ jobs:
         with:
           context: .
           push: true
-          tags: ${{ env.REGISTRY }}/icedbs3proxy/${{ env.IMAGE_NAME }}:latest,${{ env.REGISTRY }}/icedbs3proxy/${{ env.IMAGE_NAME }}:${{ steps.previoustag.outputs.tag }}
+          tags: ${{ env.REGISTRY }}/danthegoodman1/${{ env.IMAGE_NAME }}:latest,${{ env.REGISTRY }}/danthegoodman1/${{ env.IMAGE_NAME }}:${{ steps.previoustag.outputs.tag }}
           platforms: linux/amd64
           # ,linux/arm64
