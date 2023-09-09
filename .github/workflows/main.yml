@@ -6,7 +6,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: icedb-s3-proxy
+  IMAGE_NAME: icedbs3proxy
 
 jobs:
   build-and-push:
@@ -60,6 +60,6 @@ jobs:
         with:
           context: .
           push: true
-          tags: ${{ env.REGISTRY }}/icedb-s3-proxy/${{ env.IMAGE_NAME }}:latest,${{ env.REGISTRY }}/icedb-s3-proxy/${{ env.IMAGE_NAME }}:${{ steps.previoustag.outputs.tag }}
+          tags: ${{ env.REGISTRY }}/icedbs3proxy/${{ env.IMAGE_NAME }}:latest,${{ env.REGISTRY }}/icedbs3proxy/${{ env.IMAGE_NAME }}:${{ steps.previoustag.outputs.tag }}
           platforms: linux/amd64
           # ,linux/arm64
