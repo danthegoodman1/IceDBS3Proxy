@@ -192,9 +192,8 @@ func (srv *HTTPServer) ProxyS3Request(c *CustomContext) error {
 		pathParts := strings.Split(c.Request().RequestURI, "/")
 		newPathParts := []string{resolvedBucket.Prefix}
 		if utils.S3UsePath {
-			// if we are path routing, then we can do this
-			logger.Debug().Msg("using path routing")
-			newPathParts = []string{pathParts[1], resolvedBucket.Prefix}
+			// if we are path routing, then we need to prepend the bucket
+			newPathParts = []string{utils.S3Bucket, resolvedBucket.Prefix}
 		}
 		newPathParts = append(newPathParts, pathParts[2:]...)
 		newPath = "/" + strings.Join(newPathParts, "/")
