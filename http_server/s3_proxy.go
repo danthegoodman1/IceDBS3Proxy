@@ -187,13 +187,16 @@ func (srv *HTTPServer) ProxyS3Request(c *CustomContext) error {
 
 	newPath := resolvedBucket.Prefix + c.Request().RequestURI
 	if c.IsPathRouting {
-		logger.Debug().Msgf("adjusting new path for path routing with request url %s", c.Request().RequestURI)
 		// Need to deal with the bucket `/bucket/...` needs to be `/bucket/prefix/...
+		// If the client is using path routing, we need to use path routing
 		pathParts := strings.Split(c.Request().RequestURI, "/")
-		newPathParts := []string{pathParts[1], resolvedBucket.Prefix}
-		logger.Debug().Msgf("new path parts %+v", newPathParts)
+		newPathParts := []string{resolvedBucket.Prefix}
+		if utils.S3UsePath {
+			// if we are path routing, then we can do this
+			logger.Debug().Msg("using path routing")
+			newPathParts = []string{pathParts[1], resolvedBucket.Prefix}
+		}
 		newPathParts = append(newPathParts, pathParts[2:]...)
-		logger.Debug().Msgf("new path parts (updated) %+v", newPathParts)
 		newPath = "/" + strings.Join(newPathParts, "/")
 	}
 
@@ -202,7 +205,7 @@ func (srv *HTTPServer) ProxyS3Request(c *CustomContext) error {
 	})
 	logger.Debug().Msg("proxying request")
 
-	req, err := http.NewRequestWithContext(c.Request().Context(), c.Request().Method, utils.S3UrlWithBucket+newPath, nil)
+	req, err := http.NewRequestWithContext(c.Request().Context(), c.Request().Method, utils.S3Url+newPath, nil)
 	if err != nil {
 		return c.InternalError(err, "error making new request for proxying")
 	}

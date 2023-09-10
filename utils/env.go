@@ -1,15 +1,13 @@
 package utils
 
 import (
+	"github.com/samber/lo"
 	"os"
 	"strings"
 )
 
 var (
 	Env = os.Getenv("ENV")
-
-	S3UrlWithBucket    = MustEnv("S3_URL_WITH_BUCKET")
-	S3UrlWithBucketPtr = Ptr(S3UrlWithBucket)
 
 	HTTPPort   = GetEnvOrDefault("HTTP_PORT", "8080")
 	MyHost     = MustEnv("MY_HOST")
@@ -20,6 +18,8 @@ var (
 	S3Bucket     = MustEnv("S3_BUCKET")
 	S3BucketPtr  = Ptr(S3Bucket)
 	S3UsePath    = os.Getenv("S3_USE_PATH") == "1"
+	S3Url        = lo.Ternary(S3UsePath, AddBucketSubdomain(MustEnv("S3_URL"), S3Bucket), MustEnv("S3_URL"))
+	S3UrlPtr     = Ptr(S3Url)
 	AWSRegion    = MustEnv("AWS_REGION")
 	AWSRegionPtr = Ptr(AWSRegion)
 
