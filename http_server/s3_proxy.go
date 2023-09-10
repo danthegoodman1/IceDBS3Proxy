@@ -187,6 +187,7 @@ func (srv *HTTPServer) ProxyS3Request(c *CustomContext) error {
 
 	newPath := resolvedBucket.Prefix + c.Request().RequestURI
 	if c.IsPathRouting {
+		logger.Debug().Msg("adjusting new path for path routing")
 		// Need to deal with the bucket `/bucket/...` needs to be `/bucket/prepend/...
 		pathParts := strings.Split(c.Request().RequestURI, "/")
 		newPathParts := []string{pathParts[1], resolvedBucket.Prefix}
