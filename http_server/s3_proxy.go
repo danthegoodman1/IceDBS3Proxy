@@ -200,12 +200,14 @@ func (srv *HTTPServer) ProxyS3Request(c *CustomContext) error {
 		newPath = "/" + strings.Join(newPathParts, "/")
 	}
 
+	finalURL := utils.S3Url + newPath
+
 	logger.UpdateContext(func(ctx zerolog.Context) zerolog.Context {
-		return ctx.Bool("proxied", true).Str("newPath", newPath)
+		return ctx.Bool("proxied", true).Str("newPath", newPath).Str("finalURL", finalURL)
 	})
 	logger.Debug().Msg("proxying request")
 
-	req, err := http.NewRequestWithContext(c.Request().Context(), c.Request().Method, utils.S3Url+newPath, nil)
+	req, err := http.NewRequestWithContext(c.Request().Context(), c.Request().Method, finalURL, nil)
 	if err != nil {
 		return c.InternalError(err, "error making new request for proxying")
 	}
