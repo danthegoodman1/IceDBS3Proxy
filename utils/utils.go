@@ -340,5 +340,5 @@ func MustEnv(env string) string {
 
 func AddBucketSubdomain(s3URL, bucket string) string {
 	parts := strings.Split(s3URL, "://")
-	return strings.Join([]string{parts[0], "://", bucket, parts[1]}, "")
+	return strings.Join([]string{parts[0], "://", bucket, ".", parts[1]}, "")
 }
