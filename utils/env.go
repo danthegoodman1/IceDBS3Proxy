@@ -18,7 +18,7 @@ var (
 	S3Bucket     = MustEnv("S3_BUCKET")
 	S3BucketPtr  = Ptr(S3Bucket)
 	S3UsePath    = os.Getenv("S3_USE_PATH") == "1"
-	S3Url        = lo.Ternary(S3UsePath, AddBucketSubdomain(MustEnv("S3_URL"), S3Bucket), MustEnv("S3_URL"))
+	S3Url        = lo.Ternary(S3UsePath, MustEnv("S3_URL"), AddBucketSubdomain(MustEnv("S3_URL"), S3Bucket))
 	S3UrlPtr     = Ptr(S3Url)
 	AWSRegion    = MustEnv("AWS_REGION")
 	AWSRegionPtr = Ptr(AWSRegion)
