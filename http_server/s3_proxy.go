@@ -199,7 +199,7 @@ func (srv *HTTPServer) ProxyS3Request(c *CustomContext) error {
 	})
 	logger.Debug().Msg("proxying request")
 
-	req, err := http.NewRequestWithContext(c.Request().Context(), c.Request().Method, utils.S3ProxyUrl+newPath, nil)
+	req, err := http.NewRequestWithContext(c.Request().Context(), c.Request().Method, utils.S3UrlWithBucket+newPath, nil)
 	if err != nil {
 		return c.InternalError(err, "error making new request for proxying")
 	}

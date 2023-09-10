@@ -38,7 +38,7 @@ func NewIceDBLogReader(ctx context.Context) (*IceDBLogReader, error) {
 		return nil, fmt.Errorf("error in config.LoadDefaultConfig: %w", err)
 	}
 	logReader.s3Client = s3.NewFromConfig(s3Cfg, func(options *s3.Options) {
-		options.BaseEndpoint = utils.S3ProxyUrlPtr
+		options.BaseEndpoint = utils.S3UrlWithBucketPtr
 		options.UsePathStyle = utils.S3UsePath
 	})
 	return logReader, nil
