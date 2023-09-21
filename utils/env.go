@@ -13,15 +13,16 @@ var (
 	MyHost     = MustEnv("MY_HOST")
 	MyURLParts = strings.Split(MyHost, ".")
 
-	AWSKeyID     = MustEnv("AWS_KEY_ID")
-	AWSSecretKey = MustEnv("AWS_KEY_SECRET")
-	S3Bucket     = MustEnv("S3_BUCKET")
-	S3BucketPtr  = Ptr(S3Bucket)
-	S3UsePath    = os.Getenv("S3_USE_PATH") == "1"
-	S3Url        = lo.Ternary(S3UsePath, MustEnv("S3_URL"), AddBucketSubdomain(MustEnv("S3_URL"), S3Bucket))
-	S3UrlPtr     = Ptr(S3Url)
-	AWSRegion    = MustEnv("AWS_REGION")
-	AWSRegionPtr = Ptr(AWSRegion)
+	AWSKeyID           = MustEnv("AWS_KEY_ID")
+	AWSSecretKey       = MustEnv("AWS_KEY_SECRET")
+	S3Bucket           = MustEnv("S3_BUCKET")
+	S3BucketPtr        = Ptr(S3Bucket)
+	S3UsePath          = os.Getenv("S3_USE_PATH") == "1"
+	S3Url              = MustEnv("S3_URL")
+	S3UrlPtr           = Ptr(S3Url)
+	S3UrlWithSubdomain = lo.Ternary(S3UsePath, S3Url, AddBucketSubdomain(S3Url, S3Bucket))
+	AWSRegion          = MustEnv("AWS_REGION")
+	AWSRegionPtr       = Ptr(AWSRegion)
 
 	LookupURL  = MustEnv("LOOKUP_URL")
 	LookupAuth = os.Getenv("LOOKUP_AUTH")

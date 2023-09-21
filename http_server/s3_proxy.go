@@ -199,7 +199,7 @@ func (srv *HTTPServer) ProxyS3Request(c *CustomContext) error {
 		newPath = "/" + strings.Join(newPathParts, "/")
 	}
 
-	finalURL := utils.S3Url + newPath
+	finalURL := utils.S3UrlWithSubdomain + newPath
 
 	logger.UpdateContext(func(ctx zerolog.Context) zerolog.Context {
 		return ctx.Bool("proxied", true).Str("finalURL", finalURL)

@@ -4,6 +4,10 @@ go 1.18
 
 require (
 	github.com/UltimateTournament/backoff/v4 v4.2.1
+	github.com/aws/aws-sdk-go-v2/config v1.18.33
+	github.com/aws/aws-sdk-go-v2/credentials v1.13.32
+	github.com/aws/aws-sdk-go-v2/service/s3 v1.38.2
+	github.com/bytedance/sonic v1.10.0
 	github.com/cockroachdb/cockroach-go/v2 v2.2.16
 	github.com/go-playground/validator/v10 v10.11.1
 	github.com/google/uuid v1.3.0
@@ -12,9 +16,11 @@ require (
 	github.com/jackc/pgx/v4 v4.17.2
 	github.com/joho/godotenv v1.5.1
 	github.com/labstack/echo/v4 v4.9.1
+	github.com/mailgun/groupcache/v2 v2.5.0
 	github.com/matoous/go-nanoid/v2 v2.0.0
 	github.com/prometheus/client_golang v1.11.0
 	github.com/rs/zerolog v1.28.0
+	github.com/samber/lo v1.38.1
 	github.com/segmentio/ksuid v1.0.4
 	github.com/uber-go/tally/v4 v4.1.7
 	golang.org/x/net v0.10.0
@@ -23,8 +29,6 @@ require (
 require (
 	github.com/aws/aws-sdk-go-v2 v1.20.1 // indirect
 	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.4.12 // indirect
-	github.com/aws/aws-sdk-go-v2/config v1.18.33 // indirect
-	github.com/aws/aws-sdk-go-v2/credentials v1.13.32 // indirect
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.13.8 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/configsources v1.1.38 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.4.32 // indirect
@@ -34,13 +38,11 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/internal/checksum v1.1.33 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.9.32 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.15.1 // indirect
-	github.com/aws/aws-sdk-go-v2/service/s3 v1.38.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sso v1.13.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.15.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sts v1.21.2 // indirect
 	github.com/aws/smithy-go v1.14.1 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
-	github.com/bytedance/sonic v1.10.0 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/chenzhuoyu/base64x v0.0.0-20230717121745-296ad89f973d // indirect
 	github.com/chenzhuoyu/iasm v0.9.0 // indirect
@@ -58,7 +60,6 @@ require (
 	github.com/klauspost/cpuid/v2 v2.0.9 // indirect
 	github.com/labstack/gommon v0.4.0 // indirect
 	github.com/leodido/go-urn v1.2.1 // indirect
-	github.com/mailgun/groupcache/v2 v2.5.0 // indirect
 	github.com/mattn/go-colorable v0.1.12 // indirect
 	github.com/mattn/go-isatty v0.0.16 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.1 // indirect
@@ -66,7 +67,6 @@ require (
 	github.com/prometheus/client_model v0.3.0 // indirect
 	github.com/prometheus/common v0.26.0 // indirect
 	github.com/prometheus/procfs v0.6.0 // indirect
-	github.com/samber/lo v1.38.1 // indirect
 	github.com/segmentio/fasthash v1.0.3 // indirect
 	github.com/sirupsen/logrus v1.9.0 // indirect
 	github.com/stretchr/testify v1.8.3 // indirect

@@ -80,7 +80,6 @@ func CloseCache(ctx context.Context) error {
 }
 
 func resolveFromAPI(ctx context.Context, body []byte) ([]byte, error) {
-	fmt.Println("sending body", string(body))
 	req, err := http.NewRequestWithContext(ctx, "POST", utils.LookupURL+"/resolve_virtual_bucket", bytes.NewReader(body))
 	if err != nil {
 		return nil, fmt.Errorf("error in NewRequestWithContext: %w", err)
