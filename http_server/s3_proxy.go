@@ -218,7 +218,7 @@ func (srv *HTTPServer) ProxyS3Request(c *CustomContext) error {
 	headers := c.Request().Header.Clone()
 	// If we have an access key, throw it away, as it's partially based on the host
 	headers.Del("Authorization")
-	fmt.Println("Headers: %+v", headers)
+	fmt.Printf("Headers: %+v\n", headers)
 	req.Header = headers
 
 	res, err := http.DefaultClient.Do(req)
