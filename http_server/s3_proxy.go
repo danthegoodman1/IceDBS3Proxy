@@ -134,7 +134,7 @@ func (srv *HTTPServer) ListObjectInterceptor(c *CustomContext) error {
 	var contents []Content
 	for _, af := range aliveFiles.AliveFiles {
 		contents = append(contents, Content{
-			Key:          strings.ReplaceAll(af.Path, "tenant/", ""), // drop the prefix
+			Key:          strings.ReplaceAll(af.Path, resolvedBucket.Prefix, ""), // drop the prefix
 			Size:         af.ByteLength,
 			StorageClass: "STANDARD",
 		})
