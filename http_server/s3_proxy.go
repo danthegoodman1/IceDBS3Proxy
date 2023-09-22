@@ -186,16 +186,17 @@ func (srv *HTTPServer) ProxyS3Request(c *CustomContext) error {
 	}
 
 	droppedVirtualBucket := strings.ReplaceAll(c.Request().RequestURI, c.VirtualBucketName, "")
+	prefixWithData := resolvedBucket.Prefix + "/_data"
 
-	newPath := resolvedBucket.Prefix + droppedVirtualBucket
+	newPath := prefixWithData + droppedVirtualBucket
 	if c.IsPathRouting {
 		// Need to deal with the bucket `/bucket/...` needs to be `/bucket/prefix/...
 		// If the client is using path routing, we need to use path routing
 		pathParts := strings.Split(droppedVirtualBucket, "/")
-		newPathParts := []string{resolvedBucket.Prefix}
+		newPathParts := []string{prefixWithData}
 		if utils.S3UsePath {
 			// if we are path routing, then we need to prepend the bucket
-			newPathParts = []string{utils.S3Bucket, resolvedBucket.Prefix}
+			newPathParts = []string{utils.S3Bucket, prefixWithData}
 		}
 		newPathParts = append(newPathParts, pathParts[2:]...)
 		newPath = "/" + strings.Join(newPathParts, "/")
