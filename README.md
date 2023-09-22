@@ -13,6 +13,7 @@ Currently, the proxy expects the target bucket to require no auth, as found in t
   * [Lookup](#lookup)
   * [Configuration](#configuration)
   * [Control Plane](#control-plane)
+  * [Performance](#performance)
 <!-- TOC -->
 
 ## Lookup
