@@ -218,7 +218,6 @@ func (srv *HTTPServer) ProxyS3Request(c *CustomContext) error {
 	headers := c.Request().Header.Clone()
 	// If we have an access key, throw it away, as it's partially based on the host
 	headers.Del("Authorization")
-	fmt.Printf("Headers: %+v\n", headers)
 	req.Header = headers
 
 	res, err := http.DefaultClient.Do(req)
@@ -226,6 +225,14 @@ func (srv *HTTPServer) ProxyS3Request(c *CustomContext) error {
 		return c.InternalError(err, "error doing proxy request")
 	}
 	defer res.Body.Close()
+
+	// Copy headers
+	for name, headers := range res.Header {
+		// Iterate all headers with one name (e.g. Content-Type)
+		for _, hdr := range headers {
+			c.Response().Header().Set(name, hdr)
+		}
+	}
 
 	return c.Stream(res.StatusCode, res.Header.Get("content-type"), res.Body)
 }
