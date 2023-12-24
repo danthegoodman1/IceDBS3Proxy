@@ -15,7 +15,6 @@ services:
       MINIO_ROOT_USER: user
       MINIO_ROOT_PASSWORD: password
     command: server --console-address ":9001" /data
-    container_name: minio
   createbuckets:
     image: minio/mc
     depends_on:

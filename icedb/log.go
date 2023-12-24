@@ -87,7 +87,8 @@ func (lr *IceDBLogReader) ReadState(ctx context.Context, pathPrefix, offset stri
 	var s3Files []types.Object
 	prefix := strings.Join([]string{pathPrefix, "_log"}, "/")
 	for {
-		logger.Debug().Str("prefix", prefix).Msgf("listing s3 objects")
+		logger.Debug().Str("prefix", prefix).Str("realBucket", *utils.S3BucketPtr).Msgf("listing s3 objects")
+
 		listObjects, err := lr.s3Client.ListObjectsV2(ctx, &s3.ListObjectsV2Input{
 			Bucket:            utils.S3BucketPtr,
 			ContinuationToken: contToken,

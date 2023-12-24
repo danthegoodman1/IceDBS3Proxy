@@ -24,7 +24,7 @@ var (
 
 type (
 	VirtualBucketResolveReq struct {
-		VirtualBucket string
+		VirtualBucket, KeyID string
 	}
 	VirtualBucketResolveRes struct {
 		// If omitted, will be ""
@@ -106,7 +106,7 @@ func resolveFromAPI(ctx context.Context, body []byte) ([]byte, error) {
 
 // ResolveVirtualBucket Lookups up a prefix (namespace) and timestamp for a given virtual bucket.
 // The remote server must return a prefix. If a timestamp is not returned then the current one will be used.
-func ResolveVirtualBucket(ctx context.Context, virtBucket string) (*VirtualBucketResolveRes, error) {
+func ResolveVirtualBucket(ctx context.Context, virtBucket, keyID string) (*VirtualBucketResolveRes, error) {
 	var resBody VirtualBucketResolveRes
 	if utils.DevLookupPrefix != "" {
 		resBody.Prefix = utils.DevLookupPrefix
@@ -129,6 +129,7 @@ func ResolveVirtualBucket(ctx context.Context, virtBucket string) (*VirtualBucke
 	} else {
 		jBytes, err = sonic.Marshal(VirtualBucketResolveReq{
 			VirtualBucket: virtBucket,
+			KeyID:         keyID,
 		})
 		if err != nil {
 			return nil, fmt.Errorf("error in sonic.Marshal: %w", err)

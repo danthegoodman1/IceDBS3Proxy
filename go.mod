@@ -1,6 +1,6 @@
 module github.com/danthegoodman1/GoAPITemplate
 
-go 1.18
+go 1.21
 
 require (
 	github.com/UltimateTournament/backoff/v4 v4.2.1
