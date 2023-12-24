@@ -17,6 +17,7 @@ import (
 type CustomContext struct {
 	echo.Context
 	RequestID, UserID, VirtualBucketName, RealBucketName string
+	AWSCredentials                                       AWSAuthHeaderCredential
 	IsPathRouting                                        bool
 }
 
