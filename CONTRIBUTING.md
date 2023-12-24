@@ -20,6 +20,17 @@ Write some initial files:
 
 I use the simple test with icedb and just comment out the delete at the end
 
+Install clickhouse if you don't have it:
+
+```
+curl https://clickhouse.com/ | sh
+```
+
+I move it to `/usr/local/bin` with:
+
+```
+mv clickhouse /usr/local/bin/
+```
 
 Select the files directly from minio to make sure they work:
 
