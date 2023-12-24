@@ -61,7 +61,7 @@ func getStringToSign(c echo.Context, canonicalRequest string) string {
 	s := "AWS4-HMAC-SHA256" + "\n"
 	s += c.Request().Header.Get("X-Amz-Date") + "\n"
 
-	scope := c.Request().Header.Get("X-Amz-Date")[:8] + "/" + "us-east-1" + "/" + "dynamodb" + "/aws4_request"
+	scope := c.Request().Header.Get("X-Amz-Date")[:8] + "/" + "us-east-1" + "/" + "s3" + "/aws4_request"
 	s += scope + "\n"
 	s += fmt.Sprintf("%x", getSHA256([]byte(canonicalRequest)))
 
@@ -71,7 +71,7 @@ func getStringToSign(c echo.Context, canonicalRequest string) string {
 func getSigningKey(c echo.Context, password string) []byte {
 	dateKey := getHMAC([]byte("AWS4"+password), []byte(c.Request().Header.Get("X-Amz-Date")[:8]))
 	dateRegionKey := getHMAC(dateKey, []byte("us-east-1"))
-	dateRegionServiceKey := getHMAC(dateRegionKey, []byte("dynamodb"))
+	dateRegionServiceKey := getHMAC(dateRegionKey, []byte("s3"))
 	signingKey := getHMAC(dateRegionServiceKey, []byte("aws4_request"))
 	return signingKey
 }
@@ -100,7 +100,6 @@ func parseAuthHeader(header string) AWSAuthHeader {
 		if part[len(part)-1] == ',' {
 			part = part[:len(part)-1]
 		}
-		fmt.Println("Got part", part)
 		keyValue := strings.SplitN(part, "=", 2)
 		if len(keyValue) != 2 {
 			continue
@@ -133,7 +132,7 @@ func verifyAWSRequest(next echo.HandlerFunc) echo.HandlerFunc {
 		parsedHeader := parseAuthHeader(c.Request().Header.Get("Authorization"))
 		canonicalRequest := getCanonicalRequest(c)
 		stringToSign := getStringToSign(c, canonicalRequest)
-		signingKey := getSigningKey(c, "testpassword") // TODO: real password from key id
+		signingKey := getSigningKey(c, "icepassword") // TODO: real password from key id
 		signature := fmt.Sprintf("%x", getHMAC(signingKey, []byte(stringToSign)))
 
 		if signature != parsedHeader.Signature {

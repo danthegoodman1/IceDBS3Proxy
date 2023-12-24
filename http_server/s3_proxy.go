@@ -105,7 +105,7 @@ func (srv *HTTPServer) ListObjectInterceptor(c *CustomContext) error {
 	}
 
 	// Resolve virtual bucket
-	resolvedBucket, err := lookup.ResolveVirtualBucket(c.Request().Context(), c.VirtualBucketName)
+	resolvedBucket, err := lookup.ResolveVirtualBucket(c.Request().Context(), c.VirtualBucketName, c.AWSCredentials.KeyID)
 	if err != nil {
 		return c.InternalError(err, "error in lookup.ResolveVirtualBucket")
 	}
@@ -180,7 +180,7 @@ func (srv *HTTPServer) ProxyS3Request(c *CustomContext) error {
 	logger := zerolog.Ctx(c.Request().Context())
 
 	// Resolve virtual bucket
-	resolvedBucket, err := lookup.ResolveVirtualBucket(c.Request().Context(), c.VirtualBucketName)
+	resolvedBucket, err := lookup.ResolveVirtualBucket(c.Request().Context(), c.VirtualBucketName, c.AWSCredentials.KeyID)
 	if err != nil {
 		return c.InternalError(err, "error in lookup.ResolveVirtualBucket")
 	}
@@ -207,7 +207,7 @@ func (srv *HTTPServer) ProxyS3Request(c *CustomContext) error {
 	logger.UpdateContext(func(ctx zerolog.Context) zerolog.Context {
 		return ctx.Bool("proxied", true).Str("finalURL", finalURL)
 	})
-	logger.Debug().Msg("proxying request")
+	logger.Debug().Str("authHeader", c.Request().Header.Get("Authorization")).Msg("proxying request")
 
 	req, err := http.NewRequestWithContext(c.Request().Context(), c.Request().Method, finalURL, nil)
 	if err != nil {

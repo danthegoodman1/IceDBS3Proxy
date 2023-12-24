@@ -10,10 +10,11 @@ interface VirtualBucket {
 
 app.post('/resolve_virtual_bucket', async (req: Request<{}, VirtualBucket, {
     VirtualBucket: string
+    KeyID: string
 }>, res) => {
-    console.log('resolving virtual bucket', req.body.VirtualBucket)
+    console.log('resolving virtual bucket', req.body.VirtualBucket, req.body.KeyID)
     res.json({
-        Prefix: 'namespaces/user_abc',
+        Prefix: 'example',
         TimeMS: new Date().getTime()
     } as VirtualBucket)
 })
